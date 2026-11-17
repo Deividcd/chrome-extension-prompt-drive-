@@ -1,0 +1,82 @@
+@media (min-width: 320px) {
+  .app {
+    min-width: 0;
+  }
+
+  .header {
+    padding: 12px;
+  }
+
+  .header__actions {
+    gap: 6px;
+  }
+
+  .button--header {
+    padding-inline: 10px;
+  }
+
+  .dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .dialog__actions .button {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .header,
+  .main,
+  .footer {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .header__actions {
+    gap: 8px;
+  }
+
+  .button--header {
+    padding-inline: 14px;
+  }
+
+  .dialog__panel {
+    width: min(520px, 100%);
+    padding: 24px;
+  }
+
+  .dialog__actions {
+    flex-direction: row;
+  }
+
+  .dialog__actions .button {
+    width: auto;
+  }
+
+  .prompt {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header,
+  .footer {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+
+  .main {
+    padding: 32px 40px;
+  }
+
+  .folders,
+  .status {
+    max-width: 960px;
+    margin-inline: auto;
+  }
+
+  .status {
+    width: 100%;
+  }
+}

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Prompt DRIVE</title>
+  <link rel="stylesheet" href="app/styles/main.css">
+  <link rel="stylesheet" href="app/styles/components.css">
+  <link rel="stylesheet" href="app/styles/responsive.css">
+</head>
+<body>
+  <div class="app" id="app" data-plan="free">
+    <a class="skip-link" href="#mainContent">Ir para as pastas</a>
+
+    <!-- =========================
+        Header
+    ========================= -->
+    <header class="header">
+      <div class="header__brand">
+        <svg class="header__logo" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="1" y="1" width="30" height="30" rx="8" fill="#2454d6"/>
+          <path d="M8 12.2h6l1.6 1.8H24a1.4 1.4 0 0 1 1.4 1.4v7.2A1.8 1.8 0 0 1 23.6 24H8.4A1.8 1.8 0 0 1 6.6 22.2v-8.2a1.8 1.8 0 0 1 1.4-1.8z" fill="#f6d56a"/>
+          <path d="M8.2 15.2h15.2" stroke="#2454d6" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <h1 class="header__title">Prompt DRIVE</h1>
+      </div>
+
+      <div class="header__actions">
+        <button type="button" class="button button--header" id="btnCreateFolder" data-action="open-folder-dialog" title="Criar nova pasta">+ pasta</button>
+        <button type="button" class="button button--header" id="btnCreatePrompt" data-action="open-prompt-dialog" title="Criar novo prompt">+ prompt</button>
+        <button type="button" class="button button--header" id="btnImportFolder" data-action="open-import-dialog" title="Importar JSON de uma pasta" hidden>+ importar</button>
+        <button type="button" class="button button--header" id="btnLicenseKey" data-action="open-license" title="">
+          <svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="8" cy="15" r="3.2"/>
+            <path d="M11 15h9"/>
+            <path d="M16.5 15v2.4"/>
+            <path d="M19.2 15v2.4"/>
+          </svg>
+          <span>Serial Key</span>
+        </button>
+        <span class="counter" id="promptCounter" aria-live="polite">…</span>
+      </div>
+    </header>
+
+    <!-- =========================
+        Main
+    ========================= -->
+    <main class="main" id="mainContent" aria-label="Pastas e prompts">
+      <section class="status" id="loadingState" data-testid="loading-state" aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <p class="status__title">Carregando...</p>
+      </section>
+
+      <section class="status" id="errorState" data-testid="error-state" hidden>
+        <h2 class="status__title">Algo saiu do lugar</h2>
+        <p class="status__text" id="errorMessage"></p>
+        <button type="button" class="button button--primary" id="btnRetry">Tentar novamente</button>
+      </section>
+
+      <section class="status" id="emptyState" data-testid="empty-state" hidden>
+        <h2 class="status__title">Nenhuma pasta ainda</h2>
+        <p class="status__text">Crie uma pasta para organizar seus prompts.</p>
+        <button type="button" class="button button--primary" id="btnEmptyCreateFolder">+ pasta</button>
+      </section>
+
+      <div class="folders" id="foldersContainer" data-testid="folders" hidden></div>
+    </main>
+
+    <!-- =========================
+        Footer
+    ========================= -->
+    <footer class="footer">
+      <span class="footer__label">Plano</span>
+      <span class="plan-badge plan-badge--free" id="userPlanBadge">Free</span>
+    </footer>
+
+    <div class="toasts" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- =========================
+        Dialogs
+    ========================= -->
+
+    <!-- Create Folder Dialog -->
+    <div class="dialog" id="folderDialog" hidden>
+      <div class="dialog__backdrop" data-action="close-dialog"></div>
+      <div class="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="folderDialogTitle" tabindex="-1">
+        <h2 class="dialog__title" id="folderDialogTitle">Nova pasta</h2>
+        <p class="dialog__text">Dê um nome para agrupar prompts relacionados.</p>
+        <form id="folderForm" novalidate>
+          <label class="field">
+            <span class="field__label">Nome da pasta</span>
+            <input class="field__input" id="folderNameInput" name="name" type="text" autocomplete="off" aria-required="true">
+            <p class="field__error" id="folderNameError" hidden></p>
+          </label>
+          <div class="dialog__actions">
+            <button type="button" class="button button--ghost" data-action="close-dialog">Cancelar</button>
+            <button type="submit" class="button button--primary">Criar pasta</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Folder Dialog -->
+    <div class="dialog" id="editFolderDialog" hidden>
+      <div class="dialog__backdrop" data-action="close-dialog"></div>
+      <div class="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="editFolderDialogTitle" tabindex="-1">
+        <h2 class="dialog__title" id="editFolderDialogTitle">Editar pasta</h2>
+        <form id="editFolderForm" novalidate>
+          <label class="field">
+            <span class="field__label">Nome da pasta</span>
+            <input class="field__input" id="editFolderNameInput" name="name" type="text" autocomplete="off" aria-required="true">
+            <p class="field__error" id="editFolderNameError" hidden></p>
+          </label>
+          <div class="dialog__actions">
+            <button type="button" class="button button--ghost" data-action="close-dialog">Cancelar</button>
+            <button type="submit" class="button button--primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create Prompt Dialog -->
+    <div class="dialog" id="promptDialog" hidden>
+      <div class="dialog__backdrop" data-action="close-dialog"></div>
+      <div class="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="promptDialogTitle" tabindex="-1">
+        <h2 class="dialog__title" id="promptDialogTitle">Novo prompt</h2>
+        <form id="promptForm" novalidate>
+          <label class="field">
+            <span class="field__label">Pasta</span>
+            <select class="field__input" id="promptFolderSelect" name="folderId" aria-required="true"></select>
+            <p class="field__error" id="promptFolderError" hidden></p>
+          </label>
+          <label class="field">
+            <span class="field__label">Nome</span>
+            <input class="field__input" id="promptNameInput" name="nome" type="text" autocomplete="off" aria-required="true">
+            <p class="field__error" id="promptNameError" hidden></p>
+          </label>
+          <label class="field">
+            <span class="field__label">Conteúdo</span>
+            <textarea class="field__input field__input--area" id="promptContentInput" name="conteudo" data-hint="promptVariableHint" aria-required="true" aria-describedby="promptVariableHint"></textarea>
+            <p class="field__error" id="promptContentError" hidden></p>
+          </label>
+          <aside class="prompt-hint" id="promptVariableHint" data-testid="prompt-variable-hint">
+            <p class="prompt-hint__text">💡 <strong>Dica:</strong> Use variáveis no formato [nome] para tornar seus prompts mais flexíveis e reutilizáveis. Exemplo: 'Crie um post sobre [tema] para [plataforma]'</p>
+          </aside>
+          <div class="dialog__actions">
+            <button type="button" class="button button--ghost" data-action="close-dialog">Cancelar</button>
+            <button type="submit" class="button button--primary">Criar prompt</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Prompt Dialog -->
+    <div class="dialog" id="promptEditDialog" hidden>
+      <div class="dialog__backdrop" data-action="close-dialog"></div>
+      <div class="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="promptEditDialogTitle" tabindex="-1">
+        <h2 class="dialog__title" id="promptEditDialogTitle">Editar prompt</h2>
+        <form id="promptEditForm" novalidate>
+          <label class="field">
+            <span class="field__label">Pasta</span>
+            <select class="field__input" id="editPromptFolderSelect" name="folderId" aria-required="true"></select>
+            <p class="field__error" id="editPromptFolderError" hidden></p>
+          </label>
+          <label class="field">
+            <span class="field__label">Nome</span>
+            <input class="field__input" id="editPromptNameInput" name="nome" type="text" autocomplete="off" aria-required="true">
+            <p class="field__error" id="editPromptNameError" hidden></p>
+          </label>
+          <label class="field">
+            <span class="field__label">Conteúdo</span>
+            <textarea class="field__input field__input--area" id="editPromptContentInput" name="conteudo" data-hint="editPromptVariableHint" aria-required="true" aria-describedby="editPromptVariableHint"></textarea>
+            <p class="field__error" id="editPromptContentError" hidden></p>
+          </label>
+          <aside class="prompt-hint" id="editPromptVariableHint" data-testid="edit-prompt-variable-hint">
+            <p class="prompt-hint__text">💡 <strong>Dica:</strong> Use variáveis no formato [nome] para tornar seus prompts mais flexíveis e reutilizáveis. Exemplo: 'Crie um post sobre [tema] para [plataforma]'</p>
+          </aside>
+          <div class="dialog__actions">
+            <button type="button" class="button button--ghost" data-action="close-dialog">Cancelar</button>
+            <button type="submit" class="button button--primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Prompt Dialog -->
+    <div class="dialog" id="confirmDeletePromptDialog" hidden>
+      <div class="dialog__backdrop" data-action="close-dialog"></div>
+      <div class="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="deletePromptDialogTitle" tabindex="-1">
+        <h2 class="dialog__title" id="deletePromptDialogTitle">Excluir prompt</h2>
+        <form id="deletePromptForm" novalidate>
+          <p class="dialog__text">O prompt <strong id="deletePromptName"></strong> será removido de forma permanente.</p>
+          <div class="dialog__actions">
+            <button type="button" class="button button--ghost" data-action="close-dialog">Cancelar</button>
+            <button type="submit" class="button button--danger" id="btnConfirmDeletePrompt">Excluir</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Folder Dialog -->
+    <div class="dialog" id="deleteFolderDialog" hidden>
+      <div class="dialog__backdrop" data-action="close-dialog"></div>
+      <div class="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="deleteFolderDialogTitle" tabindex="-1">
+        <h2 class="dialog__title" id="deleteFolderDialogTitle">Excluir pasta</h2>
+        <form id="deleteFolderForm" novalidate>
+          <div class="delete-target">
+            <span class="delete-target__icon" aria-hidden="true">📁</span>
+            <p class="delete-target__name" id="deleteFolderName"></p>
+          </div>
+          <p class="callout callout--danger">Todos os prompts desta pasta serão excluídos permanentemente. Esta ação não pode ser desfeita.</p>
+          <label class="field">
+            <span class="field__label">Digite o nome da pasta para confirmar</span>
+            <input class="field__input" id="deleteFolderInput" name="confirmation" type="text" autocomplete="off" spellcheck="false" aria-required="true">
+            <p class="field__error" id="deleteFolderError" hidden></p>
+          </label>
+          <div class="dialog__actions">
+            <button type="button" class="button button--ghost" data-action="close-dialog">Cancelar</button>
+            <button type="submit" class="button button--danger">Excluir Pasta</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- License Dialog -->
+    <div class="dialog" id="licenseDialog" hidden>
+      <div class="dialog__backdrop" data-action="close-dialog"></div>
+      <div class="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="licenseDialogTitle" tabindex="-1">
+        <h2 class="dialog__title" id="licenseDialogTitle">Ativar Premium</h2>
+        <p class="dialog__text">A serial key libera prompts ilimitados, importação e exportação por 30 dias nesta sessão.</p>
+        <form id="licenseForm" novalidate>
+          <label class="field">
+            <span class="field__label">Serial key</span>
+            <input class="field__input" id="licenseKeyInput" name="licenseKey" type="text" autocomplete="off" spellcheck="false" aria-required="true" placeholder="Cole sua serial key">
+            <p class="field__error" id="licenseKeyError" hidden></p>
+          </label>
+          <div class="dialog__actions">
+            <button type="button" class="button button--ghost" data-action="close-dialog">Cancelar</button>
+            <button type="submit" class="button button--primary">Ativar Premium</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Import Dialog -->
+    <div class="dialog" id="importDialog" hidden>
+      <div class="dialog__backdrop" data-action="close-dialog"></div>
+      <div class="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="importDialogTitle" tabindex="-1">
+        <h2 class="dialog__title" id="importDialogTitle">Importar pasta</h2>
+        <p class="dialog__text">Cole o JSON de uma pasta ou escolha um arquivo. O JSON precisa ter folder.name e uma lista prompts com nome e conteudo.</p>
+        <form id="importForm" novalidate>
+          <label class="field">
+            <span class="field__label">JSON</span>
+            <textarea class="field__input field__input--area" id="importJsonInput" name="json" spellcheck="false"></textarea>
+            <p class="field__error" id="importError" hidden></p>
+          </label>
+          <div class="import-file">
+            <label class="button button--ghost" for="importFileInput">Escolher arquivo</label>
+            <input class="file-input" id="importFileInput" name="file" type="file" accept="application/json,.json" tabindex="-1">
+          </div>
+          <div class="dialog__actions">
+            <button type="button" class="button button--ghost" data-action="close-dialog">Cancelar</button>
+            <button type="submit" class="button button--primary">Importar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <noscript>
+    <p class="status__text">Ative o JavaScript para usar o Prompt DRIVE.</p>
+  </noscript>
+
+  <script type="module" src="app/scripts/app.js"></script>
+</body>
+</html>
